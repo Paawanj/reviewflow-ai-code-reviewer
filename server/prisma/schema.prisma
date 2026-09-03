@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReviewSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum FindingCategory {
+  SECURITY
+  BUG
+  PERFORMANCE
+  QUALITY
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  title     String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String?
+  githubId     String?      @unique
+  repositories Repository[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  passwordHash   String?
+  githubLogin          String?
+  githubTokenEncrypted String?
+  githubTokenScopes    String?
+  refreshSessions RefreshSession[]
+
+}
+
+model RefreshSession {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+
+model Repository {
+  id            String        @id @default(cuid())
+  githubId      String?
+  owner         String
+  name          String
+  fullName      String
+  defaultBranch String        @default("main")
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pullRequests  PullRequest[]
+  sourceType    RepositorySourceType  @default(CONNECTED_GITHUB)
+  indexStatus   RepositoryIndexStatus @default(NOT_INDEXED)
+  lastIndexedAt DateTime?
+  lastIndexedSha String?
+  indexError    String?
+  isArchived    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([userId, fullName])
+  @@unique([userId, owner, name])
+}
+
+
+model PullRequest {
+  id           String     @id @default(cuid())
+  number       Int
+  title        String
+  state        String
+  author       String?
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  reviews      Review[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([repositoryId, number])
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  score         Float
+  summary       String
+  model         String
+  contextUsed   Json?
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  findings      Finding[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+
+model Finding {
+  id          String          @id @default(cuid())
+  severity    ReviewSeverity
+  category    FindingCategory
+  filePath    String
+  line        Int?
+  description String
+  suggestion  String
+  reviewId    String
+  review      Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum RepositorySourceType {
+  CONNECTED_GITHUB
+  PUBLIC_URL
+}
+
+enum RepositoryIndexStatus {
+  NOT_INDEXED
+  QUEUED
+  INDEXING
+  READY
+  FAILED
+}
