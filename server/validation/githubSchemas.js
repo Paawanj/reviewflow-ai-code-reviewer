@@ -38,10 +38,72 @@ const addRepositorySchema = z.object({
   repo: repoSchema,
 });
 
+const generateFixSchema = z.object({
+  findingDescription: z
+    .string()
+    .trim()
+    .min(5, "Finding description must contain at least 5 characters.")
+    .max(1000, "Finding description is too long."),
+  suggestion: z
+    .string()
+    .trim()
+    .min(2, "Suggestion must contain at least 2 characters.")
+    .max(1000, "Suggestion is too long."),
+  filePath: z
+    .string()
+    .trim()
+    .min(1, "File path is required.")
+    .max(500, "File path is too long."),
+  line: z.number().int().min(0).max(100000).optional().default(0),
+  codeContext: z
+    .string()
+    .trim()
+    .min(5, "Code context must contain at least 5 characters.")
+    .max(5000, "Code context is too long. Provide only the relevant surrounding code."),
+});
+
+const chatMessageSchema = z.object({
+  findingDescription: z
+    .string()
+    .trim()
+    .min(5, "Finding description must contain at least 5 characters.")
+    .max(1000, "Finding description is too long."),
+  suggestion: z
+    .string()
+    .trim()
+    .min(2, "Suggestion must contain at least 2 characters.")
+    .max(1000, "Suggestion is too long."),
+  filePath: z
+    .string()
+    .trim()
+    .min(1, "File path is required.")
+    .max(500, "File path is too long."),
+  codeContext: z
+    .string()
+    .trim()
+    .min(5, "Code context must contain at least 5 characters.")
+    .max(5000, "Code context is too long."),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z
+          .string()
+          .trim()
+          .min(1, "Message content is required.")
+          .max(2000, "Message is too long."),
+      })
+    )
+    .min(1, "At least one message is required.")
+    .max(20, "Conversation is too long. Start a new chat."),
+});
+
 module.exports = {
   contextQuerySchema,
   pullRequestParamsSchema,
   repositoryParamsSchema,
   reviewIdParamsSchema,
   addRepositorySchema,
+  generateFixSchema,
+  chatMessageSchema,
 };

@@ -187,7 +187,7 @@ async function reviewPullRequest({ owner, repo, pullNumber, diff, context = [] }
   const safeContext = sanitizeContext(context);
   const ai = await getGeminiClient();
   const response = await generateReviewWithRetry(ai, {
-    model: "gemma-4-31b-it",
+    model: "gemini-3.1-flash-lite",
     contents: buildReviewPrompt({ owner, repo, pullNumber, diff, context: safeContext }),
     config: {
       responseMimeType: "application/json",

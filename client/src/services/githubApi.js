@@ -52,3 +52,30 @@ export async function reindexRepository(repositoryId) {
 export async function deleteAddedRepository(repositoryId) {
   await api.delete(`/repositories/${repositoryId}`);
 }
+
+export async function getPullRequestDiff(owner, repo, pullNumber) {
+  const response = await api.get(`/github/repos/${owner}/${repo}/pulls/${pullNumber}/diff`);
+  return response.data.diff;
+}
+
+export async function generateFindingFix({ findingDescription, suggestion, filePath, line, codeContext }) {
+  const response = await api.post("/github/fix", {
+    findingDescription,
+    suggestion,
+    filePath,
+    line,
+    codeContext,
+  });
+  return response.data.fix;
+}
+
+export async function chatAboutFinding({ findingDescription, suggestion, filePath, codeContext, messages }) {
+  const response = await api.post("/github/chat", {
+    findingDescription,
+    suggestion,
+    filePath,
+    codeContext,
+    messages,
+  });
+  return response.data.reply;
+}

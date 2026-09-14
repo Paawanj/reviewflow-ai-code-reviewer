@@ -4,6 +4,8 @@ const { sendError, sendJson } = require("../utils/response");
 const repositoryIndexService = require("../services/repositoryIndexService");
 const reviewPersistenceService = require("../services/reviewPersistenceService");
 const authService = require("../services/authService");
+const fixService = require("../services/fixService");
+const chatService = require("../services/chatService");
 
 const reviewsInProgress = new Set();
 
@@ -255,6 +257,34 @@ async function getReviewAnalytics(request, response) {
   return sendJson(response, 200, analytics);
 }
 
+async function generateFindingFix(request, response) {
+  const { findingDescription, suggestion, filePath, line, codeContext } = request.body;
+
+  const fix = await fixService.generateFix({
+    findingDescription,
+    suggestion,
+    filePath,
+    line,
+    codeContext,
+  });
+
+  return sendJson(response, 200, { fix });
+}
+
+async function chatAboutFinding(request, response) {
+  const { findingDescription, suggestion, filePath, codeContext, messages } = request.body;
+
+  const result = await chatService.chat({
+    findingDescription,
+    suggestion,
+    filePath,
+    codeContext,
+    messages,
+  });
+
+  return sendJson(response, 200, { reply: result.reply });
+}
+
 module.exports = {
   getRepositories,
   getPullRequests,
@@ -267,6 +297,8 @@ module.exports = {
   getSavedReview,
   getRecentSavedReviews,
   getReviewAnalytics,
+  generateFindingFix,
+  chatAboutFinding,
   getRequestGitHubToken,
   getOptionalRequestGitHubToken,
   usePublicFallback,

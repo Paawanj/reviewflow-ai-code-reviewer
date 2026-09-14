@@ -6,6 +6,8 @@ const {
   pullRequestParamsSchema,
   repositoryParamsSchema,
   reviewIdParamsSchema,
+  generateFixSchema,
+  chatMessageSchema,
 } = require("../validation/githubSchemas");
 const { asyncHandler } = require("../utils/response");
 const { requireAuth } = require("../middleware/requireAuth");
@@ -59,6 +61,16 @@ router.get(
   "/repos/:owner/:repo/pulls/:number/reviews",
   validateRequest(pullRequestParamsSchema, "params"),
   asyncHandler(githubController.getPullRequestReviewHistory)
+);
+router.post(
+  "/fix",
+  validateRequest(generateFixSchema, "body"),
+  asyncHandler(githubController.generateFindingFix)
+);
+router.post(
+  "/chat",
+  validateRequest(chatMessageSchema, "body"),
+  asyncHandler(githubController.chatAboutFinding)
 );
 
 module.exports = router;
